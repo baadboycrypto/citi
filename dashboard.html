@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Citi Bank - Interactive Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .navbar {
+      background: rgba(0, 59, 113, 0.95);
+      backdrop-filter: blur(20px);
+      padding: 1rem;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      transition: all 0.3s ease;
+    }
+
+    .navbar.scrolled {
+      background: rgba(0, 59, 113, 0.98);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .nav-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .nav-links {
+      display: flex;
+      list-style: none;
+      gap: 2rem;
+    }
+
+    .nav-links li {
+      position: relative;
+    }
+
+    .nav-links a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: white;
+      text-decoration: none;
+      padding: 1rem;
+      border-radius: 15px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-links a::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .nav-links a:hover::before {
+      left: 100%;
+    }
+
+    .nav-links a:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .nav-icon {
+      width: 28px;
+      height: 28px;
+      margin-bottom: 0.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .nav-links a:hover .nav-icon {
+      transform: rotate(360deg) scale(1.2);
+    }
+
+    .header {
+      margin-top: 100px;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .profile-pic {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 4px solid white;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .profile-pic:hover {
+      transform: scale(1.1) rotate(5deg);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    #welcomeMsg {
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 300;
+      text-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .dashboard {
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 2rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card:hover {
+      transform: translateY(-10px) scale(1.02);
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .card h2 {
+      color: white;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      font-weight: 400;
+    }
+
+    .card p {
+      color: #e0e0e0;
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .card ul {
+      list-style: none;
+      color: #e0e0e0;
+    }
+
+    .card li {
+      padding: 0.5rem 0;
+      transition: all 0.3s ease;
+    }
+
+    .card li:hover {
+      transform: translateX(10px);
+      color: white;
+    }
+
+    .chart-section {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 2rem;
+      margin: 2rem 0;
+      transition: all 0.3s ease;
+    }
+
+    .chart-section:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .chart-section h2 {
+      color: white;
+      margin-bottom: 1rem;
+      font-weight: 300;
+    }
+
+    .three-container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 2rem;
+      margin: 2rem 0;
+      height: 400px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .three-container h2 {
+      color: white;
+      margin-bottom: 1rem;
+      font-weight: 300;
+      text-align: center;
+    }
+
+    #threeCanvas {
+      width: 100% !important;
+      height: 100% !important;
+      border-radius: 15px;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin: 1rem 0;
+      flex-wrap: wrap;
+    }
+
+    .control-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 0.8rem 1.5rem;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.9rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .control-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .control-btn.active {
+      background: rgba(0, 59, 113, 0.8);
+      box-shadow: 0 0 20px rgba(0, 59, 113, 0.5);
+    }
+
+    .footer {
+      background: rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(20px);
+      color: white;
+      text-align: center;
+      padding: 2rem;
+      margin-top: 3rem;
+    }
+
+    .footer a {
+      color: #e0e0e0;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .footer a:hover {
+      color: white;
+    }
+
+    .floating-elements {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .floating-element {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      animation: float 20s infinite linear;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+      }
+      90% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-100px) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+      }
+      70% {
+        box-shadow: 0 0 0 20px rgba(255, 255, 255, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+      }
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      color: white;
+      text-align: center;
+      transform: scale(0.8);
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .modal.show .modal-content {
+      transform: scale(1);
+      opacity: 1;
+    }
+
+    .close-modal {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      padding: 0.8rem 1.5rem;
+      border-radius: 25px;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .close-modal:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    @media (max-width: 768px) {
+      .nav-links {
+        gap: 1rem;
+      }
+      
+      .nav-links a {
+        padding: 0.5rem;
+      }
+      
+      .cards {
+        grid-template-columns: 1fr;
+      }
+      
+      #welcomeMsg {
+        font-size: 2rem;
+      }
+      
+      .user-info {
+        flex-direction: column;
+      }
+    }
+
+    /* Phone (Small devices) */
+    @media (max-width: 480px) {
+      .navbar {
+        padding: 0.5rem;
+      }
+
+      .nav-container {
+        width: 100%;
+      }
+
+      .nav-links {
+        gap: 0.5rem;
+        justify-content: space-between;
+        width: 100%;
+      }
+
+      .nav-links a {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+      }
+
+      .nav-icon {
+        width: 20px;
+        height: 20px;
+      }
+
+      .header {
+        margin-top: 80px;
+        padding: 1rem;
+      }
+
+      .profile-pic {
+        width: 60px;
+        height: 60px;
+      }
+
+      #welcomeMsg {
+        font-size: 1.5rem;
+      }
+
+      .dashboard {
+        padding: 1rem;
+      }
+
+      .card {
+        padding: 1rem;
+      }
+
+      .card h2 {
+        font-size: 1rem;
+      }
+
+      .card p {
+        font-size: 1.5rem;
+      }
+
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .control-btn {
+        width: 100%;
+        margin: 0.5rem 0;
+      }
+
+      .chart-section, .three-container {
+        padding: 1rem;
+        height: 250px;
+      }
+
+      .modal-content {
+        width: 95%;
+        padding: 1rem;
+      }
+
+      .footer {
+        padding: 1rem;
+        font-size: 0.9rem;
+      }
+    }
+
+    /* Tablet */
+    @media (min-width: 481px) and (max-width: 768px) {
+      .nav-links {
+        gap: 1rem;
+      }
+
+      .cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .chart-section, .three-container {
+        height: 300px;
+      }
+
+      .header {
+        margin-top: 90px;
+      }
+
+      .profile-pic {
+        width: 70px;
+        height: 70px;
+      }
+
+      #welcomeMsg {
+        font-size: 2rem;
+      }
+    }
+
+    /* iPad and Small Laptops */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .chart-section, .three-container {
+        height: 350px;
+      }
+
+      .nav-links {
+        gap: 1.5rem;
+      }
+
+      .dashboard {
+        max-width: 900px;
+      }
+    }
+
+    /* Desktop */
+    @media (min-width: 1025px) and (max-width: 1440px) {
+      .dashboard {
+        max-width: 1400px;
+      }
+
+      .cards {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .chart-section, .three-container {
+        height: 400px;
+      }
+
+      .nav-links {
+        gap: 2rem;
+      }
+    }
+
+    /* Large Desktop */
+    @media (min-width: 1441px) {
+      .dashboard {
+        max-width: 1800px;
+      }
+
+      .cards {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 3rem;
+      }
+
+      .chart-section, .three-container {
+        height: 500px;
+      }
+
+      .nav-links {
+        gap: 2.5rem;
+      }
+
+      .nav-icon {
+        width: 32px;
+        height: 32px;
+      }
+    }
+
+    /* Landscape Mode */
+    @media (max-height: 500px) and (orientation: landscape) {
+      .header {
+        margin-top: 60px;
+      }
+
+      .user-info {
+        flex-direction: row;
+      }
+
+      .chart-section, .three-container {
+        height: 250px;
+      }
+
+      .navbar {
+        padding: 0.5rem;
+      }
+
+      .nav-links {
+        gap: 1rem;
+      }
+    }
+
+    /* Dark Mode Support */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      }
+
+      .card {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .modal-content {
+        background: rgba(0, 0, 0, 0.8);
+      }
+    }
+
+    /* Print Styles */
+    @media print {
+      .navbar, .controls, .footer {
+        display: none;
+      }
+
+      body {
+        background: white;
+      }
+
+      .card {
+        break-inside: avoid;
+        border: 1px solid #ccc;
+        background: white;
+        color: black;
+        box-shadow: none;
+      }
+
+      .chart-section, .three-container {
+        break-inside: avoid;
+        border: 1px solid #ccc;
+        background: white;
+      }
+
+      .header {
+        margin-top: 0;
+      }
+
+      #welcomeMsg {
+        color: black;
+      }
+    }
+
+    /* High Contrast Mode */
+    @media (prefers-contrast: high) {
+      .card {
+        border: 2px solid white;
+      }
+
+      .nav-links a {
+        border: 1px solid white;
+      }
+
+      .control-btn {
+        border: 2px solid white;
+      }
+    }
+
+    /* Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation: none !important;
+        transition: none !important;
+      }
+
+      .card:hover {
+        transform: none;
+      }
+
+      .nav-links a:hover {
+        transform: none;
+      }
+    }
+
+
+    
+    
+  </style>
+</head>
+<body>
+  <div class="floating-elements" id="floatingElements"></div>
+
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <ul class="nav-links">
+        <li><a href="home.html" onclick="showSection('Home')" class="nav-link active">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+          </svg>
+          Home
+        </a></li>
+        <li><a href="transactions.html" onclick="showSection('transactions')" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7 4V2C7 1.45 7.45 1 8 1H16C16.55 1 17 1.45 17 2V4H20C20.55 4 21 4.45 21 5S20.55 6 20 6H19V19C19 20.1 18.1 21 17 21H7C5.9 21 5 20.1 5 19V6H4C3.45 6 3 5.55 3 5S3.45 4 4 4H7ZM9 3V4H15V3H9ZM7 6V19H17V6H7Z"/>
+          </svg>
+          Transactions
+        </a></li>
+        <li><a href="transfers.html" onclick="showSection('transfer')" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M14,12L10,8V11H2V13H10V16M20,18V6C20,4.89 19.1,4 18,4H6A2,2 0 0,0 4,6V9H6V6H18V18H6V15H4V18A2,2 0 0,0 6,20H18A2,2 0 0,0 20,18Z"/>
+          </svg>
+          Transfer
+        </a></li>
+        <li><a href="settings.html" onclick="showSection('settings')" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
+          </svg>
+          Settings
+        </a></li>
+        <li><a href="#" onclick="logout()" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M16,17V14H9V10H16V7L21,12L16,17M14,2A2,2 0 0,1 16,4V6H14V4H5V20H14V18H16V20A2,2 0 0,1 14,22H5A2,2 0 0,1 3,20V4A2,2 0 0,1 5,2H14Z"/>
+          </svg>
+          Logout
+        </a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <header class="header">
+    <div class="user-info">
+      <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiMwMDNCNzEiLz4KPGNpcmNsZSBjeD0iNDAiIGN5PSIzMCIgcj0iMTIiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0yMCA2MEMzMiA1MiA0OCA1MiA2MCA2MFY3MEMzMiA3MCA0OCA3MCAyMCA3MFY2MFoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=" alt="User Profile" class="profile-pic pulse" onclick="showProfileModal()">
+      <h1 id="welcomeMsg">Welcome, John</h1>
+    </div>
+  </header>
+
+  <main class="dashboard">
+    <section class="cards" id="cardsSection">
+      <div class="card" onclick="showBalanceDetails()">
+        <h2>💰 Total Balance</h2>
+        <p id="totalBalance">$24,500.00</p>
+        <small>+2.5% from last month</small>
+      </div>
+      <div class="card" onclick="showCreditDetails()">
+        <h2>💳 Available Credit</h2>
+        <p id="availableCredit">$5,000.00</p>
+        <small>Credit limit: $10,000</small>
+      </div>
+      <div class="card" onclick="showBillsDetails()">
+        <h2>📄 Upcoming Bills</h2>
+        <p>$1,200.00</p>
+        <small>due this week</small>
+      </div>
+      <div class="card" onclick="showNotifications()">
+        <h2>🔔 Notifications</h2>
+        <ul>
+          <li>✅ Salary Credited</li>
+          <li>⚠️ Electricity Bill due in 2 days</li>
+          <li>📱 New security alert</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="controls">
+      <button class="control-btn active" onclick="switchVisualization('chart')">📊 2D Charts</button>
+      <button class="control-btn" onclick="switchVisualization('3d')">🎯 3D Visualization</button>
+      <button class="control-btn" onclick="animateCards()">✨ Animate Cards</button>
+      <button class="control-btn" onclick="toggleTheme()">🌙 Toggle Theme</button>
+    </div>
+
+    <section class="chart-section" id="chartSection">
+      <h2>📈 Spending Overview</h2>
+      <canvas id="spendingChart" width="400" height="200"></canvas>
+    </section>
+
+    <section class="three-container" id="threeSection" style="display: none;">
+      <h2>🎯 3D Financial Visualization</h2>
+      <canvas id="threeCanvas"></canvas>
+      <div class="controls">
+        <button class="control-btn" onclick="rotateView()">🔄 Rotate View</button>
+        <button class="control-btn" onclick="resetCamera()">📷 Reset Camera</button>
+        <button class="control-btn" onclick="changeColors()">🎨 Change Colors</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2025, Citi Bank. All rights reserved.</p>
+    <a href="#">Privacy Policy</a> | <a href="#">Terms of Use</a> | <a href="#">Help Center</a>
+  </footer>
+
+  <!-- General Modal -->
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h3 id="modalTitle"></h3>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let scene, camera, renderer, cube, spheres = [], animationId;
+    let spendingChart;
+    let currentTheme = 'dark';
+    let balanceHistory = [20000, 21500, 23000, 24500, 24500];
+    
+    // Initialize everything
+    document.addEventListener('DOMContentLoaded', function() {
+      initFloatingElements();
+      initChart();
+      initThreeJS();
+      initScrollEffects();
+      initCardAnimations();
+      updateBalanceWithAnimation();
+    });
+
+    // Floating background elements
+    function initFloatingElements() {
+      const container = document.getElementById('floatingElements');
+      for (let i = 0; i < 20; i++) {
+        const element = document.createElement('div');
+        element.className = 'floating-element';
+        element.style.left = Math.random() * 100 + '%';
+        element.style.animationDelay = Math.random() * 20 + 's';
+        element.style.animationDuration = (Math.random() * 10 + 15) + 's';
+        container.appendChild(element);
+      }
+    }
+
+    // Chart initialization
+    function initChart() {
+      const ctx = document.getElementById('spendingChart').getContext('2d');
+      spendingChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Rent', 'Groceries', 'Utilities', 'Entertainment', 'Others'],
+          datasets: [{
+            label: 'Monthly Spending ($)',
+            data: [900, 400, 200, 150, 100],
+            backgroundColor: [
+              'rgba(255, 99, 132, 0.8)',
+              'rgba(54, 162, 235, 0.8)',
+              'rgba(255, 205, 86, 0.8)',
+              'rgba(75, 192, 192, 0.8)',
+              'rgba(153, 102, 255, 0.8)'
+            ],
+            borderColor: 'rgba(255, 255, 255, 0.8)',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              labels: {
+                color: 'white'
+              }
+            }
+          },
+          animation: {
+            animateRotate: true,
+            animateScale: true,
+            duration: 2000
+          }
+        }
+      });
+    }
+
+    // Three.js initialization
+    function initThreeJS() {
+      const container = document.getElementById('threeCanvas');
+      
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+      renderer = new THREE.WebGLRenderer({ canvas: container, alpha: true, antialias: true });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setClearColor(0x000000, 0);
+
+      // Create 3D spending visualization
+      const spendingData = [900, 400, 200, 150, 100];
+      const colors = [0xff6384, 0x36a2eb, 0xffcd56, 0x4bc0c0, 0x9966ff];
+      const labels = ['Rent', 'Groceries', 'Utilities', 'Entertainment', 'Others'];
+
+      spendingData.forEach((value, index) => {
+        const geometry = new THREE.CylinderGeometry(0.5, 0.5, value / 100, 8);
+        const material = new THREE.MeshPhongMaterial({ 
+          color: colors[index],
+          transparent: true,
+          opacity: 0.8
+        });
+        const cylinder = new THREE.Mesh(geometry, material);
+        
+        cylinder.position.x = (index - 2) * 2;
+        cylinder.position.y = value / 200;
+        scene.add(cylinder);
+        spheres.push(cylinder);
+      });
+
+      // Add lighting
+      const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+      scene.add(ambientLight);
+      
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      directionalLight.position.set(10, 10, 5);
+      scene.add(directionalLight);
+
+      camera.position.z = 10;
+      camera.position.y = 5;
+      camera.lookAt(0, 0, 0);
+
+      animate3D();
+    }
+
+    function animate3D() {
+      animationId = requestAnimationFrame(animate3D);
+      
+      spheres.forEach((sphere, index) => {
+        sphere.rotation.y += 0.01;
+        sphere.position.y = Math.sin(Date.now() * 0.001 + index) * 0.5 + sphere.geometry.parameters.height / 200;
+      });
+
+      renderer.render(scene, camera);
+    }
+
+    // Scroll effects
+    function initScrollEffects() {
+      window.addEventListener('scroll', () => {
+        const navbar = document.getElementById('navbar');
+        if (window.scrollY > 50) {
+          navbar.classList.add('scrolled');
+        } else {
+          navbar.classList.remove('scrolled');
+        }
+      });
+    }
+
+    // Card animations
+    function initCardAnimations() {
+      const cards = document.querySelectorAll('.card');
+      cards.forEach((card, index) => {
+        card.style.animationDelay = (index * 0.1) + 's';
+        card.style.animation = 'fadeInUp 0.6s ease-out forwards';
+      });
+    }
+
+    function animateCards() {
+      const cards = document.querySelectorAll('.card');
+      cards.forEach((card, index) => {
+        setTimeout(() => {
+          card.style.transform = 'translateY(-20px) rotateY(360deg)';
+          setTimeout(() => {
+            card.style.transform = '';
+          }, 600);
+        }, index * 100);
+      });
+    }
+
+    // Balance animation
+    function updateBalanceWithAnimation() {
+      const balanceElement = document.getElementById('totalBalance');
+      let current = 0;
+      const target = 24500;
+      const increment = target / 100;
+      
+      function updateBalance() {
+        current += increment;
+        if (current < target) {
+          balanceElement.textContent = '$' + Math.floor(current).toLocaleString() + '.00';
+          requestAnimationFrame(updateBalance);
+        } else {
+          balanceElement.textContent = '$' + target.toLocaleString() + '.00';
+        }
+      }
+      updateBalance();
+    }
+
+    // Visualization switching
+    function switchVisualization(type) {
+      const chartSection = document.getElementById('chartSection');
+      const threeSection = document.getElementById('threeSection');
+      const buttons = document.querySelectorAll('.control-btn');
+      
+      // Remove active class from all buttons
+      buttons.forEach(btn => btn.classList.remove('active'));
+      
+      if (type === 'chart') {
+        chartSection.style.display = 'block';
+        threeSection.style.display = 'none';
+        event.target.classList.add('active');
+        
+        // Animate chart update
+        spendingChart.update('active');
+      } else if (type === '3d') {
+        chartSection.style.display = 'none';
+        threeSection.style.display = 'block';
+        event.target.classList.add('active');
+        
+        // Resize Three.js renderer
+        setTimeout(() => {
+          const container = document.getElementById('threeCanvas');
+          camera.aspect = container.clientWidth / container.clientHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(container.clientWidth, container.clientHeight);
+        }, 100);
+      }
+    }
+
+    // Three.js controls
+    function rotateView() {
+      spheres.forEach((sphere, index) => {
+        sphere.rotation.x += Math.PI / 4;
+        sphere.rotation.z += Math.PI / 6;
+      });
+    }
+
+    function resetCamera() {
+      camera.position.set(0, 5, 10);
+      camera.lookAt(0, 0, 0);
+    }
+
+    function changeColors() {
+      const newColors = [0x00ff00, 0xff00ff, 0x00ffff, 0xffff00, 0xff8000];
+      spheres.forEach((sphere, index) => {
+        sphere.material.color.setHex(newColors[index]);
+      });
+    }
+
+    // Theme toggle
+    function toggleTheme() {
+      const body = document.body;
+      if (currentTheme === 'dark') {
+        body.style.background = 'linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%)';
+        currentTheme = 'light';
+      } else {
+        body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        currentTheme = 'dark';
+      }
+    }
+
+    // Modal functions
+    function showModal(title, content) {
+      const modal = document.getElementById('modal');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalContent = document.getElementById('modalContent');
+      
+      modalTitle.textContent = title;
+      modalContent.innerHTML = content;
+      modal.style.display = 'flex';
+      
+      setTimeout(() => {
+        modal.classList.add('show');
+      }, 10);
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('modal');
+      modal.classList.remove('show');
+      
+      setTimeout(() => {
+        modal.style.display = 'none';
+      }, 300);
+    }
+
+    // Card detail functions
+    function showBalanceDetails() {
+      const content = `
+        <div style="text-align: left;">
+          <h3>💰 Account Balance Breakdown</h3>
+          <p><strong>Checking Account:</strong> $18,500.00</p>
+          <p><strong>Savings Account:</strong> $6,000.00</p>
+          <p><strong>Investment Portfolio:</strong> $12,000.00</p>
+          <hr style="border-color: rgba(255,255,255,0.3);">
+          <p><strong>Total Balance:</strong> $24,500.00</p>
+          <p style="color: #4ade80;">↗️ +2.5% increase from last month</p>
+        </div>
+      `;
+      showModal('Account Balance Details', content);
+    }
+
+    function showCreditDetails() {
+      const content = `
+        <div style="text-align: left;">
+          <h3>💳 Credit Information</h3>
+          <p><strong>Available Credit:</strong> $5,000.00</p>
+          <p><strong>Credit Limit:</strong> $10,000.00</p>
+          <p><strong>Current Balance:</strong> $5,000.00</p>
+          <p><strong>Minimum Payment:</strong> $150.00</p>
+          <p><strong>Due Date:</strong> May 28, 2025</p>
+          <hr style="border-color: rgba(255,255,255,0.3);">
+          <p style="color: #fbbf24;">⚠️ Consider paying down balance to improve credit utilization</p>
+        </div>
+      `;
+      showModal('Credit Card Details', content);
+    }
+
+    function showBillsDetails() {
+      const content = `
+        <div style="text-align: left;">
+          <h3>📄 Upcoming Bills</h3>
+          <p><strong>Electricity:</strong> $120.00 - Due in 2 days</p>
+          <p><strong>Internet:</strong> $80.00 - Due in 4 days</p>
+          <p><strong>Phone:</strong> $65.00 - Due in 6 days</p>
+          <p><strong>Insurance:</strong> $200.00 - Due next week</p>
+          <hr style="border-color: rgba(255,255,255,0.3);">
+          <p><strong>Total Due This Week:</strong> $1,200.00</p>
+          <button class="control-btn" onclick="payBills()" style="margin-top: 1rem;">💳 Pay All Bills</button>
+        </div>
+      `;
+      showModal('Upcoming Bills', content);
+    }
+
+    function showNotifications() {
+      const content = `
+        <div style="text-align: left;">
+          <h3>🔔 Recent Notifications</h3>
+          <div style="margin: 1rem 0; padding: 1rem; background: rgba(0,255,0,0.1); border-radius: 10px;">
+            <p><strong>✅ Salary Credited</strong></p>
+            <p>$3,500.00 deposited to your checking account</p>
+            <small>2 hours ago</small>
+          </div>
+          <div style="margin: 1rem 0; padding: 1rem; background: rgba(255,255,0,0.1); border-radius: 10px;">
+            <p><strong>⚠️ Bill Reminder</strong></p>
+            <p>Electricity bill of $120.00 due in 2 days</p>
+            <small>1 day ago</small>
+          </div>
+          <div style="margin: 1rem 0; padding: 1rem; background: rgba(255,165,0,0.1); border-radius: 10px;">
+            <p><strong>📱 Security Alert</strong></p>
+            <p>New device login detected from Chrome on Windows</p>
+            <small>3 days ago</small>
+          </div>
+        </div>
+      `;
+      showModal('Notifications', content);
+    }
+
+    function showProfileModal() {
+      const content = `
+        <div style="text-align: left;">
+          <h3>👤 Profile Information</h3>
+          <p><strong>Name:</strong> John Smith</p>
+          <p><strong>Account Number:</strong> ****-****-****-1234</p>
+          <p><strong>Member Since:</strong> January 2020</p>
+          <p><strong>Account Type:</strong> Premium Banking</p>
+          <p><strong>Status:</strong> <span style="color: #4ade80;">Active</span></p>
+          <hr style="border-color: rgba(255,255,255,0.3);">
+          <button class="control-btn" onclick="editProfile()" style="margin-top: 1rem;">✏️ Edit Profile</button>
+        </div>
+      `;
+      showModal('Profile Information', content);
+    }
+
+    // Interactive functions
+    function payBills() {
+      closeModal();
+      setTimeout(() => {
+        showModal('Payment Confirmation', `
+          <div style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+            <h3>Bills Paid Successfully!</h3>
+            <p>Total amount paid: $1,200.00</p>
+            <p>Your new balance: $23,300.00</p>
+          </div>
+        `);
+        
+        // Update balance
+        document.getElementById('totalBalance').textContent = '$23,300.00';
+      }, 500);
+    }
+
+    function editProfile() {
+      closeModal();
+      setTimeout(() => {
+        showModal('Edit Profile', `
+          <div style="text-align: left;">
+            <h3>✏️ Edit Profile Information</h3>
+            <div style="margin: 1rem 0;">
+              <label style="display: block; margin-bottom: 0.5rem;">Full Name:</label>
+              <input type="text" value="John Smith" style="width: 100%; padding: 0.5rem; border-radius: 5px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white;">
+            </div>
+            <div style="margin: 1rem 0;">
+              <label style="display: block; margin-bottom: 0.5rem;">Email:</label>
+              <input type="email" value="john.smith@email.com" style="width: 100%; padding: 0.5rem; border-radius: 5px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white;">
+            </div>
+            <div style="margin: 1rem 0;">
+              <label style="display: block; margin-bottom: 0.5rem;">Phone:</label>
+              <input type="tel" value="+1 (555) 123-4567" style="width: 100%; padding: 0.5rem; border-radius: 5px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white;">
+            </div>
+            <button class="control-btn" onclick="saveProfile()" style="margin-top: 1rem;">💾 Save Changes</button>
+          </div>
+        `);
+      }, 500);
+    }
+
+    function saveProfile() {
+      closeModal();
+      setTimeout(() => {
+        showModal('Profile Updated', `
+          <div style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+            <h3>Profile Updated Successfully!</h3>
+            <p>Your profile information has been saved.</p>
+          </div>
+        `);
+      }, 500);
+    }
+
+    // Navigation functions
+    function showSection(section) {
+      const links = document.querySelectorAll('.nav-link');
+      links.forEach(link => link.classList.remove('active'));
+      event.target.closest('a').classList.add('active');
+      
+      // Simulate section switching with animations
+      const cards = document.querySelectorAll('.card');
+      cards.forEach((card, index) => {
+        card.style.transform = 'translateX(-100%)';
+        card.style.opacity = '0';
+        
+        setTimeout(() => {
+          card.style.transition = 'all 0.5s ease';
+          card.style.transform = 'translateX(0)';
+          card.style.opacity = '1';
+        }, index * 100);
+      });
+      
+      showModal(`${section.charAt(0).toUpperCase() + section.slice(1)} Section`, `
+        <div style="text-align: center;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">🚧</div>
+          <h3>${section.charAt(0).toUpperCase() + section.slice(1)} Coming Soon!</h3>
+          <p>This section is under development and will be available soon.</p>
+          <p>Stay tuned for exciting new features!</p>
+        </div>
+      `);
+    }
+
+    function logout() {
+      showModal('Logout Confirmation', `
+        <div style="text-align: center;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">👋</div>
+          <h3>Confirm Logout</h3>
+          <p>Are you sure you want to logout?</p>
+          <div style="margin-top: 1rem;">
+            <button class="change-password-btn" onclick="confirmLogout()" style="margin: 0 0.5rem; background: rgba(192,57,43,0.8);">Yes, Logout</button>
+            <button class="change-password-btn" onclick="closeModal()" style="margin: 0 0.5rem;">Cancel</button>
+          </div>
+        </div>
+      `);
+    }
+
+    function confirmLogout() {
+      // Show logout animation
+      document.body.style.opacity = '0';
+      document.body.style.transition = 'opacity 1s ease';
+      
+      // Redirect to logout page after animation
+      setTimeout(() => {
+        window.location.href = 'logout.html';
+      }, 1000);
+    }
+
+    // Check if user is logged in
+    window.addEventListener('load', () => {
+      if (localStorage.getItem('isLoggedIn') !== 'true') {
+        window.location.href = 'index.html';
+      }
+    });
+
+    // Real-time updates simulation
+    function startRealTimeUpdates() {
+      setInterval(() => {
+        // Simulate balance changes
+        const balanceElement = document.getElementById('totalBalance');
+        const currentBalance = parseFloat(balanceElement.textContent.replace(/[$,]/g, ''));
+        const change = (Math.random() - 0.5) * 100;
+        const newBalance = currentBalance + change;
+        
+        balanceElement.textContent = '$' + newBalance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        
+        // Animate the change
+        balanceElement.style.transform = 'scale(1.1)';
+        balanceElement.style.color = change > 0 ? '#4ade80' : '#f87171';
+        
+        setTimeout(() => {
+          balanceElement.style.transform = 'scale(1)';
+          balanceElement.style.color = '#e0e0e0';
+        }, 500);
+      }, 30000); // Update every 30 seconds
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+      if (e.ctrlKey || e.metaKey) {
+        switch(e.key) {
+          case '1':
+            e.preventDefault();
+            showSection('dashboard');
+            break;
+          case '2':
+            e.preventDefault();
+            showSection('transactions');
+            break;
+          case '3':
+            e.preventDefault();
+            showSection('transfer');
+            break;
+          case '4':
+            e.preventDefault();
+            showSection('settings');
+            break;
+        }
+      }
+      
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+    });
+
+    // Mouse effects
+    document.addEventListener('mousemove', function(e) {
+      const cards = document.querySelectorAll('.card');
+      cards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
+          const centerX = rect.width / 2;
+          const centerY = rect.height / 2;
+          const rotateX = (y - centerY) / 10;
+          const rotateY = (centerX - x) / 10;
+          
+          card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(10px)`;
+        } else {
+          card.style.transform = '';
+        }
+      });
+    });
+
+    // Initialize real-time updates
+    setTimeout(startRealTimeUpdates, 5000);
+
+    // Window resize handler
+    window.addEventListener('resize', function() {
+      if (renderer && camera) {
+        const container = document.getElementById('threeCanvas');
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+      }
+    });
+
+    // Auto-save functionality (simulated)
+    function autoSave() {
+      console.log('Auto-saving user preferences...');
+      // In a real application, this would save to a server
+    }
+    
+    setInterval(autoSave, 60000); // Auto-save every minute
+  </script>
+</body>
+</html>
